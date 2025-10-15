@@ -1,3 +1,63 @@
+:root {
+  --snap-green: #22c55e;         /* brand */
+}
+
+/* DARK (default) */
+.theme-dark {
+  --bg: #000000;
+  --text: #ffffff;
+  --muted: #9ca3af;
+  --card: #111111;
+  --subtle: #0f0f0f;
+  --border: #2a2a2a;
+}
+
+/* LIGHT (Athletic Gray + Green) */
+.theme-light {
+  --bg: #f4f6f8;          /* light athletic gray */
+  --text: #0b0b0b;
+  --muted: #475569;       /* slate-ish */
+  --card: #ffffff;
+  --subtle: #f1f5f9;      /* light slab */
+  --border: #e5e7eb;      /* light gray border */
+}
+
+/* Base body uses tokens so most pages follow instantly */
+html, body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Utility helpers you can use in components */
+.token-bg { background: var(--bg); }
+.token-text { color: var(--text); }
+.token-muted { color: var(--muted); }
+.token-card { background: var(--card); }
+.token-border { border-color: var(--border); }
+.token-subtle { background: var(--subtle); }
+
+/* Buttons & inputs (optional helpers) */
+.btn-primary {
+  background: var(--snap-green);
+  color: #000;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+}
+.input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
