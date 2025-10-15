@@ -7,6 +7,7 @@ export default function Goals() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
+  // wait for auth before showing page
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
@@ -14,9 +15,14 @@ export default function Goals() {
   }, [user, loading, router]);
 
   if (loading || !user) {
-    return <div className="text-white p-6">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
+  // state
   const [gender, setGender] = useState("");
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
@@ -24,31 +30,28 @@ export default function Goals() {
   const [height, setHeight] = useState("");
   const [activity, setActivity] = useState("");
   const [goal, setGoal] = useState("");
-  const [targetWeight, setTargetWeight] = useState("");
-  const [aggression, setAggression] = useState("");
-  const [bodyType, setBodyType] = useState("");
   const [error, setError] = useState("");
 
+  function handleContinue() {
+    if (!gender || !age || !weight || !height || !activity || !goal) {
+      setError("Please fill all fields before continuing.");
+      return;
+    }
+    router.push("/tracker"); // temporary, until wizard step 2
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <NavBar />
-      <main className="max-w-xl mx-auto px-6 py-8">
-        <div className="flex justify-center mb-6">
-          <div className="flex gap-2">
-            <div className="w-3 h-3 bg-[var(--snap-green)] rounded-full"></div>
-            <div className="w-3 h-3 bg-gray-700 rounded-full"></div>
-            <div className="w-3 h-3 bg-gray-700 rounded-full"></div>
-            <div className="w-3 h-3 bg-gray-700 rounded-full"></div>
-          </div>
-        </div>
 
-        <h1 className="text-3xl font-bold mb-4">Step 1: Your Body Info</h1>
-        <p className="text-gray-400 mb-6">This helps SnapFIT build your custom plan.</p>
+      <main className="max-w-xl mx-auto px-6 py-10">
+        <h1 className="text-3xl font-bold mb-2">Your Fitness Setup</h1>
+        <p className="text-[var(--muted)] mb-6">We’ll build your custom calorie plan.</p>
 
-        <div className="bg-[#111] p-6 rounded-xl border border-gray-800 space-y-6">
+        <div className="card space-y-5">
           <div>
-            <label className="block mb-1 text-sm">Sex / Gender</label>
-            <select value={gender} onChange={e => setGender(e.target.value)} className="w-full bg-black border border-gray-700 rounded px-3 py-2">
+            <label className="block text-sm mb-1">Sex / Gender</label>
+            <select className="input w-full" value={gender} onChange={e => setGender(e.target.value)}>
               <option value="">Select</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -58,15 +61,26 @@ export default function Goals() {
           </div>
 
           <div>
-            <label className="block mb-1 text-sm">Age</label>
-            <input type="number" value={age} onChange={e => setAge(e.target.value)} className="w-full bg-black border border-gray-700 rounded px-3 py-2" placeholder="Your age" />
+            <label className="block text-sm mb-1">Age</label>
+            <input
+              type="number"
+              className="input w-full"
+              value={age}
+              onChange={e => setAge(e.target.value)}
+            />
           </div>
 
           <div>
-            <label className="block mb-1 text-sm">Weight ({unit})</label>
+            <label className="block text-sm mb-1">Weight ({unit})</label>
             <div className="flex gap-2">
-              <input type="number" value={weight} onChange={e => setWeight(e.target.value)} className="flex-1 bg-black border border-gray-700 rounded px-3 py-2" placeholder="e.g. 180" />
-              <select value={unit} onChange={e => setUnit(e.target.value)} className="bg-black border border-gray-700 rounded px-3">
+              <input
+                type="number"
+                className="input w-full"
+                value={weight}
+                onChange={e => setWeight(e.target.value)}
+                placeholder="e.g. 175"
+              />
+              <select className="input" value={unit} onChange={e => setUnit(e.target.value)}>
                 <option value="lbs">lbs</option>
                 <option value="kg">kg</option>
               </select>
@@ -74,11 +88,43 @@ export default function Goals() {
           </div>
 
           <div>
-            <label className="block mb-1 text-sm">Height (cm)</label>
-            <input type="number" value={height} onChange={e => setHeight(e.target.value)} className="w-full bg-black border border-gray-700 rounded px-3 py-2" placeholder="e.g. 178" />
+            <label className="block text-sm mb-1">Height (cm)</label>
+            <input
+              type="number"
+              className="input w-full"
+              value={height}
+              onChange={e => setHeight(e.target.value)}
+              placeholder="e.g. 180"
+            />
           </div>
 
-          <button className="w-full bg-[var(--snap-green)] text-black py-3 rounded font-semibold hover:opacity-90">
+          <div>
+            <label className="block text-sm mb-1">Activity Level</label>
+            <select className="input w-full" value={activity} onChange={e => setActivity(e.target.value)}>
+              <option value="">Select</option>
+              <option value="sedentary">Sedentary (little exercise)</option>
+              <option value="light">Light (1–2 days/week)</option>
+              <option value="moderate">Moderate (3–4 days/week)</option>
+              <option value="active">Active (5–6 days/week)</option>
+              <option value="athlete">Athlete (2x daily)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm mb-1">Goal</label>
+            <select className="input w-full" value={goal} onChange={e => setGoal(e.target.value)}>
+              <option value="">Select</option>
+              <option value="fatloss">Lose Weight</option>
+              <option value="lean">Get Lean</option>
+              <option value="muscle">Build Muscle</option>
+              <option value="maintain">Maintain Fitness</option>
+              <option value="bulk">Bulk</option>
+            </select>
+          </div>
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+
+          <button onClick={handleContinue} className="btn-primary w-full">
             Continue →
           </button>
         </div>
