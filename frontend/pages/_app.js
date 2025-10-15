@@ -1,10 +1,10 @@
-import '../styles/globals.css'
-import ThemeProvider from '../components/ThemeProvider'
+import "../styles/globals.css";
+import ThemeProvider from "../components/ThemeProvider";
 
-export default function App({ Component, pageProps }) {
+export default function MyApp({ Component, pageProps }) {
   return (
     <ThemeProvider>
       <Component {...pageProps} />
     </ThemeProvider>
-  )
+  );
 }
