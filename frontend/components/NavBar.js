@@ -11,6 +11,7 @@ export default function NavBar() {
         <div className="flex items-center gap-3">
           <a href="/tracker" className="text-sm text-gray-700 dark:text-gray-200 hover:underline">Calorie Tracker</a>
           <a href="/scan" className="text-sm text-gray-700 dark:text-gray-200 hover:underline">Body Scan</a>
+          <a href="/goals" className="hover:text-[var(--snap-green)]">Goals</a>
           <a
             href="/waitlist"
             className="hidden sm:inline-block text-sm font-semibold px-3 py-1.5 rounded-md bg-[var(--snap-green)] text-white hover:opacity-90"
