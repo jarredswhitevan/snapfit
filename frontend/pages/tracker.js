@@ -1,130 +1,80 @@
 import NavBar from '../components/NavBar'
-import { useEffect, useRef, useState } from 'react'
-import * as mobilenet from '@tensorflow-models/mobilenet'
-import '@tensorflow/tfjs'
-import { matchFood } from '../lib/foodDB'
+import { useState } from 'react'
 
-export default function Tracker(){
-  const [model, setModel] = useState(null)
-  const [imageURL, setImageURL] = useState('')
-  const [preds, setPreds] = useState([])
-  const [portion, setPortion] = useState(250) // grams
-  const [manualOverride, setManualOverride] = useState('')
-  const imgRef = useRef(null)
+export default function Tracker() {
+  const [imageBase64, setImageBase64] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState("")
 
-  useEffect(() => {
-    mobilenet.load().then(m => setModel(m))
-  }, [])
-
-  function handleFile(e){
-    const file = e.target.files[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    setImageURL(url)
-    setTimeout(runModel, 100) // wait to load image
-  }
-
-  async function runModel(){
-    if (!model || !imgRef.current) return
-    setLoading(true)
+  async function analyzeImage() {
     try {
-      const predictions = await model.classify(imgRef.current)
-      setPreds(predictions.slice(0,3))
+      setLoading(true)
+      setError("")
+      setResult(null)
+
+      const res = await fetch("/api/analyze-meal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64 })
+      })
+
+      const data = await res.json()
+      if (!data.choices) throw new Error("Invalid AI response")
+      setResult(data.choices[0].message.content)
     } catch (err) {
-      console.error(err)
-      setError("AI couldn't understand the image. Try clearer lighting.")
+      setError("AI failed to analyze this image. Try another or retake.")
     }
     setLoading(false)
   }
 
-  function estimate(){
-    const label = manualOverride || preds[0]?.className || ""
-    const db = matchFood(label)
-    if (!db) return null
-    const factor = portion / 100
-    return {
-      food: label,
-      calories: Math.round(db.kcal * factor),
-      protein: Math.round(db.protein * factor),
-      carbs: Math.round(db.carbs * factor),
-      fat: Math.round(db.fat * factor),
-      portion
-    }
+  function handleImage(e) {
+    const file = e.target.files[0]
+    const reader = new FileReader()
+    reader.onloadend = () => setImageBase64(reader.result)
+    reader.readAsDataURL(file)
   }
-
-  const result = estimate()
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       <NavBar />
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <main className="max-w-2xl mx-auto p-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">AI Smart Calorie Scanner</h1>
         <p className="text-gray-600 dark:text-gray-300 mb-6">
-          Upload a photo. AI will detect the food and estimate calories + macros.
+          Snap a meal photo. SnapFIT AI will analyze the food, estimate calories & macros, and give nutrition feedback.
         </p>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFile}
-          className="mb-4"
-        />
+        {/* Upload */}
+        <input type="file" accept="image/*" onChange={handleImage}
+          className="mb-4 block w-full text-sm file:bg-[var(--snap-green)] 
+          file:text-white file:font-semibold file:border-none file:px-4 file:py-2 rounded" />
 
-        <div className="border p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
-          {imageURL && (
-            <img ref={imgRef} src={imageURL} alt="upload" className="rounded-md mb-4" />
-          )}
+        {/* Image Preview */}
+        {imageBase64 && (
+          <div className="mb-4">
+            <img src={imageBase64} className="rounded-lg border dark:border-gray-700" />
+          </div>
+        )}
 
-          {loading && <p className="text-gray-500">Analyzing image with AI...</p>}
-          {error && <p className="text-red-500">{error}</p>}
+        {/* Analyze Button */}
+        <button
+          disabled={!imageBase64 || loading}
+          onClick={analyzeImage}
+          className="w-full bg-[var(--snap-green)] hover:opacity-90 disabled:opacity-50 
+          text-white font-semibold py-3 rounded-md transition">
+          {loading ? "Analyzing with AI..." : "Analyze Meal"}
+        </button>
 
-          {preds.length > 0 && (
-            <div className="mb-4">
-              <p className="font-semibold">Top AI guesses:</p>
-              <ul className="list-disc ml-4">
-                {preds.map((p, i) => (
-                  <li key={i}>{p.className} ({Math.round(p.probability * 100)}%)</li>
-                ))}
-              </ul>
-            </div>
-          )}
+        {/* Error */}
+        {error && <p className="text-red-500 mt-3">{error}</p>}
 
-          <label className="block mb-2">
-            Override food name (optional):
-            <input
-              className="w-full p-2 border rounded mt-1 dark:bg-black"
-              type="text"
-              placeholder="e.g. chicken breast"
-              value={manualOverride}
-              onChange={e => setManualOverride(e.target.value)}
-            />
-          </label>
-
-          <label className="block mb-2">
-            Portion size: {portion} g
-            <input
-              className="w-full"
-              type="range"
-              min="50"
-              max="800"
-              value={portion}
-              onChange={e => setPortion(e.target.value)}
-            />
-          </label>
-
-          {result && (
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border mt-4">
-              <h2 className="text-lg font-bold mb-2">Estimated Nutrition</h2>
-              <p><b>Food:</b> {result.food}</p>
-              <p><b>Calories:</b> {result.calories}</p>
-              <p><b>Protein:</b> {result.protein} g</p>
-              <p><b>Carbs:</b> {result.carbs} g</p>
-              <p><b>Fat:</b> {result.fat} g</p>
-            </div>
-          )}
-        </div>
+        {/* Result */}
+        {result && (
+          <div className="mt-6 p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900">
+            <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">AI Nutrition Analysis</h2>
+            <p className="text-gray-700 whitespace-pre-line dark:text-gray-300">{result}</p>
+          </div>
+        )}
       </main>
     </div>
   )
