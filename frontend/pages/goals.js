@@ -1,22 +1,22 @@
-import NavBar from '../components/NavBar'
-import { useState, useEffect } from 'react'
-import { useRouter } from "next/router"
-import useAuth from '../hooks/useAuth'
+import NavBar from '../components/NavBar';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import useAuth from '../hooks/useAuth';
 
 export default function Goals() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  // Wait for auth to load, then redirect if not logged in
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
     }
   }, [user, loading, router]);
 
-  if (loading) return <div className="text-white p-6">Loading...</div>;
+  if (loading || !user) {
+    return <div className="text-white p-6">Loading...</div>;
+  }
 
-  // Form state
   const [gender, setGender] = useState("");
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
@@ -43,14 +43,11 @@ export default function Goals() {
         </div>
 
         <h1 className="text-3xl font-bold mb-4">Step 1: Your Body Info</h1>
-        <p className="text-gray-400 mb-6">
-          This helps SnapFIT calculate your custom daily calories and macros.
-        </p>
+        <p className="text-gray-400 mb-6">This helps SnapFIT build your custom plan.</p>
 
         <div className="bg-[#111] p-6 rounded-xl border border-gray-800 space-y-6">
-          {/* Gender */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">Sex / Gender</label>
+            <label className="block mb-1 text-sm">Sex / Gender</label>
             <select value={gender} onChange={e => setGender(e.target.value)} className="w-full bg-black border border-gray-700 rounded px-3 py-2">
               <option value="">Select</option>
               <option value="male">Male</option>
@@ -60,17 +57,15 @@ export default function Goals() {
             </select>
           </div>
 
-          {/* Age */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">Age</label>
-            <input type="number" value={age} onChange={e => setAge(e.target.value)} placeholder="Your age" className="w-full bg-black border border-gray-700 rounded px-3 py-2" />
+            <label className="block mb-1 text-sm">Age</label>
+            <input type="number" value={age} onChange={e => setAge(e.target.value)} className="w-full bg-black border border-gray-700 rounded px-3 py-2" placeholder="Your age" />
           </div>
 
-          {/* Weight */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">Current Weight ({unit})</label>
+            <label className="block mb-1 text-sm">Weight ({unit})</label>
             <div className="flex gap-2">
-              <input type="number" value={weight} onChange={e => setWeight(e.target.value)} placeholder="e.g. 180" className="flex-1 bg-black border border-gray-700 rounded px-3 py-2" />
+              <input type="number" value={weight} onChange={e => setWeight(e.target.value)} className="flex-1 bg-black border border-gray-700 rounded px-3 py-2" placeholder="e.g. 180" />
               <select value={unit} onChange={e => setUnit(e.target.value)} className="bg-black border border-gray-700 rounded px-3">
                 <option value="lbs">lbs</option>
                 <option value="kg">kg</option>
@@ -78,72 +73,12 @@ export default function Goals() {
             </div>
           </div>
 
-          {/* Height */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">Height (cm)</label>
-            <input type="number" value={height} onChange={e => setHeight(e.target.value)} placeholder="e.g. 178" className="w-full bg-black border border-gray-700 rounded px-3 py-2" />
+            <label className="block mb-1 text-sm">Height (cm)</label>
+            <input type="number" value={height} onChange={e => setHeight(e.target.value)} className="w-full bg-black border border-gray-700 rounded px-3 py-2" placeholder="e.g. 178" />
           </div>
 
-          {/* Activity */}
-          <div>
-            <label className="block mb-1 text-sm text-gray-300">Activity Level</label>
-            <select value={activity} onChange={e => setActivity(e.target.value)} className="w-full bg-black border border-gray-700 rounded px-3 py-2">
-              <option value="">Select</option>
-              <option value="sedentary">Sedentary (little exercise)</option>
-              <option value="light">Light (1-2 days/week)</option>
-              <option value="moderate">Moderate (3-4 days/week)</option>
-              <option value="active">Active (5-6 days/week)</option>
-              <option value="athlete">Athlete (2x daily training)</option>
-            </select>
-          </div>
-
-          {/* Goal */}
-          <div>
-            <label className="block mb-1 text-sm text-gray-300">Goal</label>
-            <select value={goal} onChange={e => setGoal(e.target.value)} className="w-full bg-black border border-gray-700 rounded px-3 py-2">
-              <option value="">Select</option>
-              <option value="fatloss">Lose Weight</option>
-              <option value="lean">Get Lean & Toned</option>
-              <option value="muscle">Build Muscle</option>
-              <option value="maintain">Maintain Fitness</option>
-              <option value="bulk">Bulk Up</option>
-            </select>
-          </div>
-
-          {/* Target Weight */}
-          <div>
-            <label className="block mb-1 text-sm text-gray-300">Target Weight ({unit})</label>
-            <input type="number" value={targetWeight} onChange={e => setTargetWeight(e.target.value)} placeholder="Optional" className="w-full bg-black border border-gray-700 rounded px-3 py-2" />
-          </div>
-
-          {/* Body Type */}
-          <div>
-            <label className="block mb-1 text-sm text-gray-300">Body Type (optional)</label>
-            <select value={bodyType} onChange={e => setBodyType(e.target.value)} className="w-full bg-black border border-gray-700 rounded px-3 py-2">
-              <option value="">Select</option>
-              <option value="hardgainer">I gain weight slowly</option>
-              <option value="balanced">Average build</option>
-              <option value="easyfat">I gain fat easily</option>
-            </select>
-          </div>
-
-          {/* Aggression */}
-          <div>
-            <label className="block mb-1 text-sm text-gray-300">How fast do you want results?</label>
-            <select value={aggression} onChange={e => setAggression(e.target.value)} className="w-full bg-black border border-gray-700 rounded px-3 py-2">
-              <option value="">Select</option>
-              <option value="slow">Slow & steady</option>
-              <option value="moderate">Moderate</option>
-              <option value="aggressive">Aggressive</option>
-            </select>
-          </div>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-
-          <button
-            onClick={() => alert("Next step coming – Add Goal Calculations")}
-            className="w-full bg-[var(--snap-green)] text-black font-semibold py-3 rounded hover:opacity-90"
-          >
+          <button className="w-full bg-[var(--snap-green)] text-black py-3 rounded font-semibold hover:opacity-90">
             Continue →
           </button>
         </div>
