@@ -4,6 +4,7 @@ import useAuth from "../../hooks/useAuth";
 import NavBar from "../../components/NavBar";
 import Step1 from "./Step1";
 import Step2 from "./Step2";
+import Step3 from "./Step3";
 
 
 export default function Goals() {
@@ -27,6 +28,8 @@ export default function Goals() {
       <NavBar />
       {step === 1 && <Step1 next={() => setStep(2)} />}
       {step === 2 && <Step2 next={() => setStep(3)} back={() => setStep(1)} />}
+      {step === 3 && <Step3 next={() => setStep(4)} back={() => setStep(2)} />}
+  
       {/* Step2, Step3, Step4 will go here later */}
     </div>
   );
