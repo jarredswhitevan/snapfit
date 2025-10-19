@@ -1,16 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import NavBarOnboarding from "../../components/NavBarOnboarding";
-
-export default function Step1({ next }) {
-  return (
-    <div className="min-h-screen bg-black text-white pt-16 px-6">
-      <NavBarOnboarding showBack={false} />
-      {/* Your existing Step1 content below */}
-      {/* ... */}
-    </div>
-  );
-}
-
 
 export default function Step1({ next }) {
   // UI + form state
