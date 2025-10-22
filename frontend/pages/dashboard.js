@@ -39,4 +39,5 @@ function Card({ title, subtitle, icon }) {
     <div className="rounded-2xl border border-white/10 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] p-4 shadow-sm active:scale-[0.99] transition-all">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xl">{icon}</span>
-        <span className="text-sm text-emerald-400 font-medium">View<
+        <span className="text-sm text-emerald-400 font-medium">View</span>
+
