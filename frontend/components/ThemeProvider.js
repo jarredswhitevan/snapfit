@@ -4,26 +4,26 @@ import { createContext, useContext, useEffect, useState } from "react";
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  // default to dark immediately
   const [theme, setTheme] = useState("dark");
 
+  // Load saved theme on mount
   useEffect(() => {
-    // 1️⃣ Try to load saved theme
-    const saved = localStorage.getItem("snapfitTheme");
-    // 2️⃣ Check if user prefers dark mode from system
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    // 3️⃣ Pick active theme (default = dark)
-    const activeTheme = saved || (prefersDark ? "dark" : "dark");
-
-    // Apply to HTML element BEFORE React hydration
-    document.documentElement.classList.toggle("dark", activeTheme === "dark");
-    setTheme(activeTheme);
+    const saved = localStorage.getItem("theme");
+    if (saved) {
+      setTheme(saved);
+      document.documentElement.classList.toggle("dark", saved === "dark");
+    } else {
+      // default = dark
+      document.documentElement.classList.add("dark");
+      setTheme("dark");
+      localStorage.setItem("theme", "dark");
+    }
   }, []);
 
+  // Update DOM + storage whenever theme changes
   useEffect(() => {
-    // Whenever theme changes, sync it to HTML + localStorage
-    localStorage.setItem("snapfitTheme", theme);
     document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
   return (
