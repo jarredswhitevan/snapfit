@@ -1,5 +1,7 @@
 import { useRouter } from "next/router";
+import useTheme from "../../hooks/useTheme";
 
+const { theme, toggleTheme } = useTheme();
 export default function NavBarOnboarding({ showBack = true }) {
   const router = useRouter();
 
