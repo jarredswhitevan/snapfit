@@ -6,21 +6,19 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState("dark");
 
-  // Load saved theme on mount
+  // On mount → sync with localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    if (saved) {
-      setTheme(saved);
-      document.documentElement.classList.toggle("dark", saved === "dark");
+    const stored = localStorage.getItem("theme");
+    if (stored) {
+      setTheme(stored);
+      document.documentElement.classList.toggle("dark", stored === "dark");
     } else {
-      // default = dark
       document.documentElement.classList.add("dark");
-      setTheme("dark");
       localStorage.setItem("theme", "dark");
     }
   }, []);
 
-  // Update DOM + storage whenever theme changes
+  // Apply changes instantly
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("theme", theme);
