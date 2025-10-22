@@ -16,7 +16,7 @@
   "postcss": "8.4.23",
   "autoprefixer": "10.4.13",
   "@tensorflow/tfjs": "^4.10.0",
-  "@tensorflow-models/mobilenet": "^2.1.0"
+  "@tensorflow-models/mobilenet": "^2.1.0",
   "framer-motion": "^11.0.0"
 }
 
