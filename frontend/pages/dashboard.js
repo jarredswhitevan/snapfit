@@ -1,14 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { auth, db } from "../lib/firebase";
+import { auth, db } from "../lib/firebase"; // relative import for Vercel
 import { useAuthState } from "react-firebase-hooks/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
 
 /**
- * SNAPFIT Dashboard — Live Progress + Firebase Sync
- * -------------------------------------------------
- * Dark-mode base, smooth animations, and live Firestore data sync.
+ * SNAPFIT Dashboard — Real-Time Firebase Sync
+ * --------------------------------------------
+ * Dark mode base + live Firestore connection.
+ * Updates instantly when progress changes in Firestore.
  */
 
 export default function Dashboard() {
@@ -20,39 +21,34 @@ export default function Dashboard() {
     workouts: { current: 0, goal: 5 },
   });
 
+  // 🔥 Listen to Firestore in real-time
   useEffect(() => {
     if (!user) return;
 
     const userRef = doc(db, "users", user.uid);
-    const fetchUserData = async () => {
-      try {
-        const snap = await getDoc(userRef);
-        if (snap.exists()) {
-          const data = snap.data();
-          setUserName(data.name || user.displayName || "Athlete");
-          if (data.progress) setProgress(data.progress);
-        } else {
-          await setDoc(userRef, {
-            name: user.displayName || "Athlete",
-            progress,
-            createdAt: Date.now(),
-          });
-        }
-      } catch (err) {
-        console.error("Firestore load failed:", err);
+    const unsubscribe = onSnapshot(userRef, async (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setUserName(data.name || user.displayName || "Athlete");
+        if (data.progress) setProgress(data.progress);
+      } else {
+        await setDoc(userRef, {
+          name: user.displayName || "Athlete",
+          progress,
+          createdAt: Date.now(),
+        });
       }
-    };
+    });
 
-    fetchUserData();
+    return () => unsubscribe();
   }, [user]);
 
-  if (!user) {
+  if (!user)
     return (
       <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex items-center justify-center">
         <p className="token-muted">Please log in to access your dashboard.</p>
       </div>
     );
-  }
 
   const calcPercent = (c, g) => Math.min(100, Math.round((c / g) * 100));
 
@@ -61,6 +57,7 @@ export default function Dashboard() {
       <AnimatedHeader userName={userName} />
 
       <main className="flex-1 px-5 mt-6 space-y-6">
+        {/* PERFORMANCE STATS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <ProgressCard
             title="Calories"
@@ -82,6 +79,7 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* COACH INSIGHT */}
         <motion.div
           className="token-card border token-border rounded-xl p-5 mt-6"
           initial={{ opacity: 0, y: 10 }}
@@ -93,8 +91,8 @@ export default function Dashboard() {
           </h2>
           <p className="text-sm token-muted leading-relaxed">
             {progress.calories.current / progress.calories.goal > 0.8
-              ? "Perfect pace. Keep your protein high and hit that last workout."
-              : "Let’s tighten nutrition — aim for consistency today."}
+              ? "Perfect pace — your fuel levels are right where they should be."
+              : "Tighten up nutrition today. Hit your macros and stay consistent."}
           </p>
         </motion.div>
       </main>
