@@ -1,8 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -------------------------------
+   SNAPFIT GLOBAL THEME SYSTEM
+--------------------------------*/
+
 :root {
-  --snap-green: #22c55e;         /* brand */
+  --snap-green: #22c55e; /* Primary brand color */
 }
 
-/* DARK (default) */
+/* DARK THEME (default) */
 .theme-dark {
   --bg: #000000;
   --text: #ffffff;
@@ -12,23 +20,28 @@
   --border: #2a2a2a;
 }
 
-/* LIGHT (Athletic Gray + Green) */
+/* LIGHT THEME (athletic gray + SnapFIT green) */
 .theme-light {
-  --bg: #f4f6f8;          /* light athletic gray */
+  --bg: #f4f6f8;
   --text: #0b0b0b;
-  --muted: #475569;       /* slate-ish */
+  --muted: #475569;
   --card: #ffffff;
-  --subtle: #f1f5f9;      /* light slab */
-  --border: #e5e7eb;      /* light gray border */
+  --subtle: #f1f5f9;
+  --border: #e5e7eb;
 }
 
-/* Base body uses tokens so most pages follow instantly */
-html, body {
+/* Base layout — use theme tokens */
+html,
+body {
   background: var(--bg);
   color: var(--text);
+  transition: background 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
 }
 
-/* Utility helpers you can use in components */
+/* -------------------------------
+   TOKENS — quick use helpers
+--------------------------------*/
 .token-bg { background: var(--bg); }
 .token-text { color: var(--text); }
 .token-muted { color: var(--muted); }
@@ -36,14 +49,21 @@ html, body {
 .token-border { border-color: var(--border); }
 .token-subtle { background: var(--subtle); }
 
-/* Buttons & inputs (optional helpers) */
+/* -------------------------------
+   COMPONENT HELPERS
+--------------------------------*/
 .btn-primary {
   background: var(--snap-green);
   color: #000;
   border-radius: 0.5rem;
   padding: 0.6rem 1rem;
   font-weight: 600;
+  transition: all 0.2s ease;
 }
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+
 .input {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -51,21 +71,32 @@ html, body {
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
 }
+
 .card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1.25rem;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Brand tokens */
-:root {
-  --snap-green: #16A34A;
+/* -------------------------------
+   SCROLLBAR (optional aesthetic)
+--------------------------------*/
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--subtle);
 }
 
-/* Smooth theme transition */
-html { transition: color 0.2s ease, background-color 0.2s ease; }
+/* -------------------------------
+   TAILWIND BASE OVERRIDES
+--------------------------------*/
+html {
+  scroll-behavior: smooth;
+}
