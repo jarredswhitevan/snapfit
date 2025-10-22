@@ -1,4 +1,4 @@
-import "@/styles/globals.css";
+import "../styles/globals.css";
 import { ThemeProvider } from "../components/ThemeProvider";
 
 export default function App({ Component, pageProps }) {
