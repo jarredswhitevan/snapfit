@@ -1,6 +1,30 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/lib/firebase";
+import useUserData from "@/hooks/useUserData";
+
+export default function Dashboard() {
+  const [user] = useAuthState(auth);
+  const { data, loading } = useUserData(user?.uid);
+
+  if (!user) return <p>Please log in to see your dashboard.</p>;
+  if (loading) return <p>Loading your plan...</p>;
+
+  return (
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-6">
+      <h1 className="text-2xl font-bold mb-4">
+        Welcome back, {data.name || user.email.split("@")[0]} 👋
+      </h1>
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
+        <h2 className="text-lg mb-2">Progress</h2>
+        <p className="text-[var(--muted)]">{data.progress}% complete</p>
+      </div>
+    </div>
+  );
+}
+
 
 /**
  * SNAPFIT Dashboard — Live Progress Version
