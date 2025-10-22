@@ -3,46 +3,71 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 /**
- * SNAPFIT Dashboard — Premium Dark Mode Version
- * ----------------------------------------------
- * AI-powered aesthetic with animation and progress rings.
+ * SNAPFIT Dashboard — Live Progress Version
+ * -----------------------------------------
+ * Loads progress data dynamically from Firebase or local mock data.
  */
 
 export default function Dashboard() {
   const [userName, setUserName] = useState("Athlete");
+  const [progress, setProgress] = useState({
+    calories: { current: 0, goal: 2400 },
+    protein: { current: 0, goal: 180 },
+    workouts: { current: 0, goal: 5 },
+  });
 
   useEffect(() => {
     const name = localStorage.getItem("snapfitUserName") || "Athlete";
     setUserName(name);
+
+    // Try loading from Firebase or fallback to local mock
+    const loadData = async () => {
+      try {
+        const stored = localStorage.getItem("snapfitProgress");
+        if (stored) {
+          setProgress(JSON.parse(stored));
+        } else {
+          // Mock starter data
+          const mock = {
+            calories: { current: 2000, goal: 2400 },
+            protein: { current: 160, goal: 180 },
+            workouts: { current: 4, goal: 5 },
+          };
+          localStorage.setItem("snapfitProgress", JSON.stringify(mock));
+          setProgress(mock);
+        }
+      } catch (err) {
+        console.error("Progress load failed:", err);
+      }
+    };
+
+    loadData();
   }, []);
+
+  const calcPercent = (c, g) => Math.min(100, Math.round((c / g) * 100));
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors flex flex-col pb-24">
-      {/* HEADER */}
       <AnimatedHeader userName={userName} />
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 px-5 mt-6 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <ProgressCard
             title="Calories"
-            subtitle="2,000 / 2,400 kcal"
-            percent={82}
-            color="var(--snap-green)"
+            subtitle={`${progress.calories.current} / ${progress.calories.goal} kcal`}
+            percent={calcPercent(progress.calories.current, progress.calories.goal)}
             icon="🔥"
           />
           <ProgressCard
             title="Protein"
-            subtitle="160g / 180g"
-            percent={89}
-            color="#22c55e"
+            subtitle={`${progress.protein.current}g / ${progress.protein.goal}g`}
+            percent={calcPercent(progress.protein.current, progress.protein.goal)}
             icon="🥩"
           />
           <ProgressCard
             title="Workouts"
-            subtitle="4 / 5 this week"
-            percent={80}
-            color="#22c55e"
+            subtitle={`${progress.workouts.current} / ${progress.workouts.goal} this week`}
+            percent={calcPercent(progress.workouts.current, progress.workouts.goal)}
             icon="💪"
           />
         </div>
@@ -57,8 +82,9 @@ export default function Dashboard() {
             Coach’s Insight
           </h2>
           <p className="text-sm token-muted leading-relaxed">
-            You’re on track. Maintain your protein goal and stay consistent with
-            workouts — progress compounds.
+            {progress.calories.current / progress.calories.goal > 0.8
+              ? "Perfect pace. Keep your protein high and hit that last workout."
+              : "Let’s tighten nutrition — aim for consistency today."}
           </p>
         </motion.div>
       </main>
@@ -68,7 +94,7 @@ export default function Dashboard() {
   );
 }
 
-/* ----------------- COMPONENTS ------------------ */
+/* ---------- COMPONENTS ---------- */
 
 function AnimatedHeader({ userName }) {
   return (
@@ -94,9 +120,7 @@ function AnimatedHeader({ userName }) {
   );
 }
 
-/* ----------------- PROGRESS CARD ------------------ */
-
-function ProgressCard({ title, subtitle, percent, color, icon }) {
+function ProgressCard({ title, subtitle, percent, icon }) {
   const radius = 28;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
@@ -114,8 +138,6 @@ function ProgressCard({ title, subtitle, percent, color, icon }) {
         </h3>
         <p className="text-sm token-muted">{subtitle}</p>
       </div>
-
-      {/* Circular Progress Ring */}
       <svg
         className="w-16 h-16 -rotate-90"
         viewBox="0 0 80 80"
@@ -134,7 +156,7 @@ function ProgressCard({ title, subtitle, percent, color, icon }) {
           cx="40"
           cy="40"
           r={radius}
-          stroke={color}
+          stroke="var(--snap-green)"
           strokeWidth="6"
           fill="none"
           strokeDasharray={circumference}
@@ -147,8 +169,6 @@ function ProgressCard({ title, subtitle, percent, color, icon }) {
     </motion.div>
   );
 }
-
-/* ----------------- NAV BAR ------------------ */
 
 function MainNav() {
   const nav = [
