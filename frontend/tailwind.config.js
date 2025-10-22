@@ -1,18 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class',
+  darkMode: "class", // VERY IMPORTANT
   content: [
-    "./pages/**/*.{js,jsx}",
-    "./components/**/*.{js,jsx}"
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {
-      colors: {
-        snap: {
-          green: "#16A34A"
-        }
-      }
-    },
+    extend: {},
   },
   plugins: [],
-}
+};
