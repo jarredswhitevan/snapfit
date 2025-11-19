@@ -1,12 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { auth, googleProvider } from "../lib/firebase";
-import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import Link from "next/link";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          window.location.href = "/goals";
+        }
+      } catch (err) {
+        console.error("Google redirect login failed", err);
+        if (isMounted) {
+          setError(`Google login failed: ${err.message}`);
+        }
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function loginWithEmail() {
     try {
@@ -22,7 +47,15 @@ export default function Login() {
       await signInWithPopup(auth, googleProvider);
       window.location.href = "/goals";
     } catch (err) {
-      setError("Google login failed. Try again.");
+      console.error("Google login popup failed", err);
+      if (
+        err?.code === "auth/popup-blocked" ||
+        err?.code === "auth/operation-not-supported-in-this-environment"
+      ) {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+      setError(`Google login failed: ${err.message}`);
     }
   }
 
