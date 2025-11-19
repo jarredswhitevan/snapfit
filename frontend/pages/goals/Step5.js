@@ -73,7 +73,8 @@ export default function Step5({ back, user }) {
         }
       }
 
-      setTimeout(() => router.push("/welcome"), 300);
+      setLoading(false);
+      setTimeout(() => router.push("/welcome"), 150);
     } catch (err) {
       console.error("Failed to start trial", err);
       setError("Unable to start trial. Please try again.");
