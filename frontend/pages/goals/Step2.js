@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 
-export default function Step2({ next, back }) {
+export default function Step2({ next, back, user }) {
   const [activity, setActivity] = useState("");
   const [goal, setGoal] = useState("");
   const [error, setError] = useState("");

@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from "react";
+import { useUnits } from "../../contexts/UnitContext";
 
-export default function Step3({ next, back }) {
+export default function Step3({ next, back, user }) {
   // Load saved data
+  const { units, setWeightUnit } = useUnits();
   const [goalIntensity, setGoalIntensity] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [bodyFat, setBodyFat] = useState(18); // default
-  const [unitWeight, setUnitWeight] = useState("lbs");
+  const [unitWeight, setUnitWeight] = useState(units.weight || "lbs");
   const [goal, setGoal] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setUnitWeight(units.weight || "lbs");
+  }, [units]);
 
   useEffect(() => {
     try {
@@ -17,7 +23,10 @@ export default function Step3({ next, back }) {
         if (saved.goalIntensity) setGoalIntensity(saved.goalIntensity);
         if (saved.bodyFat) setBodyFat(saved.bodyFat);
         if (saved.goal) setGoal(saved.goal);
-        if (saved.unitWeight) setUnitWeight(saved.unitWeight);
+        if (saved.unitWeight) {
+          setUnitWeight(saved.unitWeight);
+          setWeightUnit(saved.unitWeight);
+        }
         if (saved.targetWeight) setTargetWeight(saved.targetWeight);
       }
     } catch {}
@@ -96,7 +105,39 @@ export default function Step3({ next, back }) {
       {/* TARGET WEIGHT */}
       {goal !== "recomp" && (
         <div className="mb-8">
-          <label className="block mb-1 text-sm text-[var(--muted)]">Target Weight ({unitWeight})</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm text-[var(--muted)]">Target Weight ({unitWeight})</label>
+            <div className="flex gap-1 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setUnitWeight("lbs");
+                  setWeightUnit("lbs");
+                }}
+                className={`px-2 py-1 rounded border ${
+                  unitWeight === "lbs"
+                    ? "bg-[var(--snap-green)] text-black border-[var(--snap-green)]"
+                    : "border-[var(--border)]"
+                }`}
+              >
+                lbs
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUnitWeight("kg");
+                  setWeightUnit("kg");
+                }}
+                className={`px-2 py-1 rounded border ${
+                  unitWeight === "kg"
+                    ? "bg-[var(--snap-green)] text-black border-[var(--snap-green)]"
+                    : "border-[var(--border)]"
+                }`}
+              >
+                kg
+              </button>
+            </div>
+          </div>
           <input
             type="number"
             className="input w-full"

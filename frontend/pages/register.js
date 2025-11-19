@@ -1,12 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { auth, googleProvider } from "../lib/firebase";
-import { signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
 import Link from "next/link";
 
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          window.location.href = "/goals";
+        }
+      } catch (err) {
+        console.error("Google redirect signup failed", err);
+        if (isMounted) {
+          setError(`Google signup failed: ${err.message}`);
+        }
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function signupWithEmail() {
     try {
@@ -22,6 +47,14 @@ export default function Register() {
       await signInWithPopup(auth, googleProvider);
       window.location.href = "/goals";
     } catch (err) {
+      console.error("Google signup popup failed", err);
+      if (
+        err?.code === "auth/popup-blocked" ||
+        err?.code === "auth/operation-not-supported-in-this-environment"
+      ) {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
       setError("Google signup failed: " + err.message);
     }
   }
