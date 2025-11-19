@@ -7,6 +7,7 @@ import Step2 from "./Step2";
 import Step3 from "./Step3";
 import Step4 from "./Step4";
 import Step5 from "./Step5";
+import Step6 from "./Step6";
 
 
 
@@ -16,6 +17,7 @@ export default function Goals() {
   const router = useRouter();
 
   const [step, setStep] = useState(1);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -34,7 +36,17 @@ export default function Goals() {
       {step === 2 && <Step2 next={() => setStep(3)} back={() => setStep(1)} user={user} />}
       {step === 3 && <Step3 next={() => setStep(4)} back={() => setStep(2)} user={user} />}
       {step === 4 && <Step4 next={() => setStep(5)} back={() => setStep(3)} user={user} />}
-      {step === 5 && <Step5 back={() => setStep(4)} user={user} />}
+      {step === 5 && (
+        <Step5
+          back={() => setStep(4)}
+          user={user}
+          onComplete={(plan) => {
+            setSelectedPlan(plan);
+            setStep(6);
+          }}
+        />
+      )}
+      {step === 6 && <Step6 plan={selectedPlan} />}
 
   
       {/* Step2, Step3, Step4 will go here later */}

@@ -13,7 +13,7 @@ import { db } from "../../lib/firebase";
  * - Tailwind mobile-first design
  */
 
-export default function Step5({ back, user }) {
+export default function Step5({ back, user, onComplete }) {
   const router = useRouter();
   const [plan, setPlan] = useState("monthly");
   const [loading, setLoading] = useState(false);
@@ -74,7 +74,11 @@ export default function Step5({ back, user }) {
       }
 
       setLoading(false);
-      setTimeout(() => router.push("/welcome"), 150);
+      if (onComplete) {
+        onComplete(selected);
+      } else {
+        setTimeout(() => router.replace("/dashboard"), 120);
+      }
     } catch (err) {
       console.error("Failed to start trial", err);
       setError("Unable to start trial. Please try again.");
