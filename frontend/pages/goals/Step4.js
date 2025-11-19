@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
-export default function Step4({ next, back }) {
+export default function Step4({ next, back, user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [plan, setPlan] = useState(null);
@@ -134,6 +136,30 @@ export default function Step4({ next, back }) {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
+
+  useEffect(() => {
+    if (!plan || !user || !data) return;
+    const goalsRef = doc(db, "users", user.uid, "goals", "current");
+    const payload = {
+      profile: {
+        gender: data.gender || null,
+        age: data.age || null,
+        unitHeight: data.unitHeight || "imperial",
+        unitWeight: data.unitWeight || "lbs",
+        normalized: data.normalized || null,
+      },
+      activity: data.activity || null,
+      goal: data.goal || null,
+      goalIntensity: data.goalIntensity || null,
+      bodyFat: data.bodyFat || null,
+      targetWeight: data.targetWeight ?? null,
+      macroPlan: plan,
+      updatedAt: Date.now(),
+    };
+    setDoc(goalsRef, payload, { merge: true }).catch((err) =>
+      console.error("Failed to persist goal", err)
+    );
+  }, [plan, user, data]);
 
   // swipe support
   const swipeRef = useRef(null);

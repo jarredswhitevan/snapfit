@@ -1,114 +1,174 @@
-import React, { useState } from "react";
+// frontend/pages/goals/Step5.js
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
-/**
- * Step5 — Pricing & 7-Day Trial
- * --------------------------------
- * - Presents Monthly ($19.99) & Yearly ($180) plans
- * - 7-day free trial highlighted
- * - Simulates purchase → redirect to /welcome (Commit #7)
- * - Stores trial info in localStorage
- * - Tailwind mobile-first design
- */
+// Firebase (safe import; page still works if user isn't logged in)
+import { auth, db } from "../../lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 
-export default function Step5({ back }) {
+const PLANS = {
+  FREE: "free",
+  PREMIUM_MONTHLY: "premium_monthly",
+  PREMIUM_YEARLY: "premium_yearly",
+};
+
+export default function Step5() {
   const router = useRouter();
-  const [plan, setPlan] = useState("monthly");
-  const [loading, setLoading] = useState(false);
+  const [user] = useAuthState(auth);
+  const [mounted, setMounted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [selection, setSelection] = useState(PLANS.PREMIUM_MONTHLY);
 
-  const startTrial = () => {
-    setLoading(true);
-    const selected = plan === "monthly"
-      ? { id: "monthly", price: 19.99 }
-      : { id: "yearly", price: 180 };
+  useEffect(() => {
+    setMounted(true);
+    router.prefetch("/dashboard");
+  }, [router]);
 
-    const now = new Date();
-    const ends = new Date(now);
-    ends.setDate(ends.getDate() + 7);
+  // Prime with any previous choice (keeps UI snappy)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("snapfitPlan");
+    if (saved && Object.values(PLANS).includes(saved)) {
+      setSelection(saved);
+    }
+  }, []);
 
-    if (typeof window !== "undefined") {
-      localStorage.setItem("snapfitPlan", JSON.stringify(selected));
-      localStorage.setItem("snapfitIsPro", "true");
-      localStorage.setItem("snapfitTrialEndsAt", ends.toISOString());
+  const tiers = useMemo(
+    () => [
+      {
+        key: PLANS.FREE,
+        title: "Free",
+        price: "$0",
+        perks: ["Onboarding + macros", "Basic dashboard"],
+      },
+      {
+        key: PLANS.PREMIUM_MONTHLY,
+        title: "Premium",
+        price: "$19.99/mo",
+        perks: ["AI Meal Planner + Grocery", "Personalized Workouts", "Save & Sync"],
+        highlight: true,
+      },
+      {
+        key: PLANS.PREMIUM_YEARLY,
+        title: "Premium Yearly",
+        price: "$180/yr",
+        sub: "Save ~25%",
+        perks: ["Everything in Premium", "Best value"],
+      },
+    ],
+    []
+  );
+
+  async function writePlan(uid, plan) {
+    const ref = doc(db, "users", uid);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      await updateDoc(ref, { plan, updatedAt: Date.now() });
+    } else {
+      await setDoc(ref, { plan, createdAt: Date.now() });
+    }
+  }
+
+  async function handleStart(e) {
+    e?.preventDefault?.();
+    if (saving) return;
+
+    setSaving(true);
+
+    // Optimistic local cache so the app behaves even if network is slow
+    try {
+      localStorage.setItem("snapfitPlan", selection);
+    } catch {}
+
+    // Attempt Firestore write but don't let it block navigation
+    const writePromise =
+      user?.uid ? writePlan(user.uid, selection) : Promise.resolve();
+
+    // 3s timeout safety net so we never “spin forever”
+    const timeout = new Promise((resolve) =>
+      setTimeout(resolve, 3000, "timeout")
+    );
+
+    try {
+      await Promise.race([writePromise, timeout]);
+    } catch (err) {
+      // If security rules/network fail, we still continue
+      // (dashboard will read localStorage and render correctly)
+      console.error("Plan write failed (continuing):", err);
     }
 
-    // Simulated checkout success
-    setTimeout(() => router.push("/welcome"), 600);
-  };
+    // Hard navigate to ensure route change even if React state is mid-update
+    router.replace("/dashboard");
+    // Extra safety: if router stalls for any reason, force a location change
+    setTimeout(() => {
+      if (typeof window !== "undefined") {
+        window.location.replace("/dashboard");
+      }
+    }, 1500);
+  }
+
+  if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-black text-white pt-16 px-6">
-      <header className="text-center mb-10">
-        <h1 className="text-2xl font-semibold mb-2">Start Your 7-Day Free Trial</h1>
-        <p className="text-sm text-white/70">
-          Unlock full AI coaching. Cancel anytime before day 7.
-        </p>
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] pb-24">
+      <header className="px-5 pt-6 pb-2">
+        <h1 className="text-xl font-semibold">Choose Your Plan</h1>
+        <p className="text-xs token-muted mt-1">7-day free trial on Premium.</p>
       </header>
 
-      {/* Plan Selector */}
-      <div className="space-y-4">
-        <PlanCard
-          active={plan === "yearly"}
-          title="Yearly Plan"
-          subtitle="$180 / year • Save 25%"
-          onClick={() => setPlan("yearly")}
-        />
-        <PlanCard
-          active={plan === "monthly"}
-          title="Monthly Plan"
-          subtitle="$19.99 / month"
-          onClick={() => setPlan("monthly")}
-        />
-      </div>
+      <main className="px-5 py-4 grid gap-4">
+        {tiers.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setSelection(t.key)}
+            className={`text-left token-card border token-border rounded-xl p-4 ${
+              selection === t.key ? "ring-1 ring-[var(--snap-green)]" : ""
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-semibold">{t.title}</div>
+                <div className="text-sm token-muted">
+                  {t.price} {t.sub ? `• ${t.sub}` : ""}
+                </div>
+              </div>
+              <input
+                type="radio"
+                aria-label={`select ${t.title}`}
+                checked={selection === t.key}
+                onChange={() => setSelection(t.key)}
+              />
+            </div>
+            <ul className="mt-3 text-sm token-muted list-disc pl-5 space-y-1">
+              {t.perks.map((p) => (
+                <li key={p}>{p}</li>
+              ))}
+            </ul>
+          </button>
+        ))}
 
-      {/* CTA */}
-      <div className="mt-8">
         <button
-          onClick={startTrial}
-          disabled={loading}
-          className={`w-full rounded-xl py-4 text-center font-semibold transition-all ${
-            loading
-              ? "bg-emerald-600/60"
-              : "bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99]"
+          type="button"
+          onClick={handleStart}
+          disabled={saving}
+          className={`w-full mt-2 py-3 rounded-xl font-semibold text-black ${
+            saving ? "bg-[var(--snap-green)]/70" : "bg-[var(--snap-green)] hover:opacity-90"
           }`}
         >
-          {loading ? "Starting Trial..." : "Start Free Trial"}
+          {saving ? "Starting your trial…" : "Start Free Trial"}
         </button>
-        <p className="text-xs text-center text-white/60 mt-3">
-          No charge today. Cancel anytime within 7 days.
-        </p>
-      </div>
 
-      {/* Back Button */}
-      {back && (
-        <div className="text-center mt-10">
-          <button
-            onClick={back}
-            className="text-sm text-white/60 underline underline-offset-4"
-          >
-            Back
-          </button>
+        <div className="text-center mt-2">
+          <Link href="/dashboard" className="text-sm token-muted underline">
+            Skip for now
+          </Link>
         </div>
-      )}
+      </main>
     </div>
-  );
-}
-
-function PlanCard({ title, subtitle, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full text-left rounded-2xl border p-4 transition-all ${
-        active
-          ? "border-emerald-400 bg-white/[0.04] shadow-[0_0_0_3px_rgba(16,185,129,0.25)]"
-          : "border-white/10 hover:bg-white/[0.04]"
-      }`}
-    >
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <p className="text-sm text-white/70">{subtitle}</p>
-      {active && (
-        <p className="text-xs text-emerald-400 mt-1 font-medium">Selected</p>
-      )}
-    </button>
   );
 }

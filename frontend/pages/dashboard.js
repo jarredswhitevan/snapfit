@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { auth, db } from "../lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { doc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
@@ -20,6 +22,7 @@ export default function Dashboard() {
     protein: { current: 0, goal: 180 },
     workouts: { current: 0, goal: 5 },
   });
+  const [planTier, setPlanTier] = useState("free");
   const [isUpdating, setIsUpdating] = useState(false);
 
   // 🔥 Real-time sync from Firestore
@@ -42,6 +45,19 @@ export default function Dashboard() {
     });
 
     return () => unsubscribe();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const profileRef = doc(db, "users", user.uid, "profile", "main");
+    const unsub = onSnapshot(profileRef, (snap) => {
+      if (snap.exists()) {
+        setPlanTier(snap.data()?.planTier || "free");
+      } else {
+        setPlanTier("free");
+      }
+    });
+    return () => unsub();
   }, [user]);
 
   // 🧠 Calculate percent for rings
@@ -171,6 +187,39 @@ export default function Dashboard() {
               : "⚡ You’re below goal — tighten nutrition and fuel performance."}
           </p>
         </motion.div>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Quick Navigation</h2>
+            <span className="text-xs uppercase tracking-wide text-[var(--muted)]">
+              {planTier === "free" ? "Free Tier" : planTier === "elite" ? "Elite" : "Premium"}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { title: "Measurements", desc: "Log stats & track history", href: "/measurements", icon: "📏" },
+              { title: "Goals", desc: "Update your macro goal", href: "/goals", icon: "🎯" },
+              { title: "Meal Planner", desc: "AI-crafted meals", href: "/meal-planner", icon: "🍽️" },
+              { title: "Grocery List", desc: "Smart shopping lists", href: "/grocery-list", icon: "🛒" },
+              { title: "Workout Builder", desc: "Custom training", href: "/workout-builder", icon: "🏋️" },
+              { title: "Daily Plan", desc: "Meals + training", href: "/daily-plan", icon: "📅" },
+              { title: "Progress Photos", desc: "Upload + compare", href: "/progress-photos", icon: "📸" },
+              { title: "Account / Subscription", desc: "Manage plan", href: "/account", icon: "💼" },
+            ].map((link) => (
+              <Link
+                key={link.title}
+                href={link.href}
+                className="border token-border token-card rounded-xl p-4 flex items-start gap-3 hover:border-[var(--snap-green)] transition"
+              >
+                <div className="text-2xl">{link.icon}</div>
+                <div>
+                  <p className="font-semibold">{link.title}</p>
+                  <p className="text-sm token-muted">{link.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
       </main>
 
       <MainNav />
@@ -269,27 +318,29 @@ function ProgressCard({ title, subtitle, percent, icon }) {
 }
 
 function MainNav() {
+  const router = useRouter();
   const nav = [
-    { name: "Dashboard", icon: "🏠", active: true },
-    { name: "Food", icon: "🍎" },
-    { name: "Workouts", icon: "💪" },
-    { name: "Profile", icon: "👤" },
+    { name: "Dashboard", icon: "🏠", href: "/dashboard" },
+    { name: "Daily Plan", icon: "📅", href: "/daily-plan" },
+    { name: "Meal Planner", icon: "🍽️", href: "/meal-planner" },
+    { name: "Settings", icon: "⚙️", href: "/settings" },
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 border-t token-border token-card flex justify-around py-3 backdrop-blur-md">
       {nav.map((item) => (
-        <button
+        <Link
           key={item.name}
-          className={`flex flex-col items-center text-xs ${
-            item.active
+          href={item.href}
+          className={`flex flex-col items-center text-xs transition ${
+            router.pathname === item.href
               ? "text-[var(--snap-green)] font-semibold"
               : "token-muted hover:text-[var(--snap-green)]"
           }`}
         >
           <span className="text-xl">{item.icon}</span>
           <span className="mt-1">{item.name}</span>
-        </button>
+        </Link>
       ))}
     </nav>
   );
