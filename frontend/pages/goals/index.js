@@ -30,11 +30,11 @@ export default function Goals() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <NavBar />
- {step === 1 && <Step1 next={() => setStep(2)} />}
-{step === 2 && <Step2 next={() => setStep(3)} back={() => setStep(1)} />}
-{step === 3 && <Step3 next={() => setStep(4)} back={() => setStep(2)} />}
-{step === 4 && <Step4 next={() => setStep(5)} back={() => setStep(3)} />}
-{step === 5 && <Step5 back={() => setStep(4)} />}
+      {step === 1 && <Step1 next={() => setStep(2)} user={user} />}
+      {step === 2 && <Step2 next={() => setStep(3)} back={() => setStep(1)} user={user} />}
+      {step === 3 && <Step3 next={() => setStep(4)} back={() => setStep(2)} user={user} />}
+      {step === 4 && <Step4 next={() => setStep(5)} back={() => setStep(3)} user={user} />}
+      {step === 5 && <Step5 back={() => setStep(4)} user={user} />}
 
   
       {/* Step2, Step3, Step4 will go here later */}

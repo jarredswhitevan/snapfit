@@ -1,5 +1,7 @@
-import NavBar from '../components/NavBar'
-import { useState } from 'react'
+import NavBar from "../components/NavBar";
+import { useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "../lib/firebase";
 
 async function fileToDataURLResized(file, maxSize = 1024, quality = 0.9) {
   // Returns a resized data URL (JPEG) to keep payload small & fast
@@ -21,6 +23,7 @@ async function fileToDataURLResized(file, maxSize = 1024, quality = 0.9) {
 }
 
 export default function Tracker() {
+  const [user, authLoading] = useAuthState(auth);
   const [imageBase64, setImageBase64] = useState("");
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,12 +45,16 @@ export default function Tracker() {
   }
 
   async function analyzeImage() {
-    if (!imageBase64) return;
+    if (!imageBase64 || !user) return;
     setLoading(true); setError(""); setResult(null); setRaw("");
     try {
+      const token = await user.getIdToken();
       const resp = await fetch("/api/analyze-meal", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ imageBase64 }),
       });
       const data = await resp.json();
@@ -68,6 +75,23 @@ export default function Tracker() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)]">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg)] text-[var(--text)]">
+        <p className="text-lg">Log in to access the AI meal scanner.</p>
+        <a href="/login" className="btn-primary">Go to Login</a>
+      </div>
+    );
   }
 
   return (

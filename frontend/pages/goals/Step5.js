@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 /**
  * Step5 — Pricing & 7-Day Trial
@@ -11,16 +13,17 @@ import { useRouter } from "next/router";
  * - Tailwind mobile-first design
  */
 
-export default function Step5({ back }) {
+export default function Step5({ back, user }) {
   const router = useRouter();
   const [plan, setPlan] = useState("monthly");
   const [loading, setLoading] = useState(false);
 
-  const startTrial = () => {
+  const startTrial = async () => {
     setLoading(true);
-    const selected = plan === "monthly"
-      ? { id: "monthly", price: 19.99 }
-      : { id: "yearly", price: 180 };
+    const selected =
+      plan === "monthly"
+        ? { id: "monthly", price: 19.99 }
+        : { id: "yearly", price: 180 };
 
     const now = new Date();
     const ends = new Date(now);
@@ -30,6 +33,24 @@ export default function Step5({ back }) {
       localStorage.setItem("snapfitPlan", JSON.stringify(selected));
       localStorage.setItem("snapfitIsPro", "true");
       localStorage.setItem("snapfitTrialEndsAt", ends.toISOString());
+    }
+
+    if (user) {
+      const profileRef = doc(db, "users", user.uid, "profile", "main");
+      await setDoc(
+        profileRef,
+        {
+          planTier: "premium",
+          subscription: {
+            tier: selected.id,
+            price: selected.price,
+            status: "trial",
+            trialEndsAt: ends.toISOString(),
+          },
+          updatedAt: Date.now(),
+        },
+        { merge: true }
+      );
     }
 
     // Simulated checkout success

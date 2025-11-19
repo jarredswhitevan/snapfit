@@ -1,3 +1,5 @@
+import { enforceAiQuota, requireUserFromRequest } from "../../lib/serverAuth";
+
 export const config = {
   api: { bodyParser: { sizeLimit: "10mb" } },
 };
@@ -8,6 +10,14 @@ export default async function handler(req, res) {
   }
 
   try {
+    const user = await requireUserFromRequest(req);
+    const quota = await enforceAiQuota(user.uid, user.planTier);
+    if (!quota.allowed) {
+      return res
+        .status(429)
+        .json({ error: `Daily AI limit reached (${quota.limit} requests). Upgrade for unlimited access.` });
+    }
+
     const { imageBase64 } = req.body;
     if (!imageBase64 || typeof imageBase64 !== "string") {
       return res.status(400).json({ error: "No image provided" });
@@ -75,6 +85,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, analysis: data });
   } catch (e) {
     console.error("Server error", e);
-    return res.status(500).json({ error: "Server failed to analyze image" });
+    const status = e?.status || 500;
+    return res.status(status).json({ error: e.message || "Server failed to analyze image" });
   }
 }
