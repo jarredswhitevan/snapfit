@@ -1,18 +1,25 @@
 import { useEffect, useRef, useState } from "react";
+import { useUnits } from "../../contexts/UnitContext";
 
-export default function Step1({ next }) {
+export default function Step1({ next, user }) {
   // UI + form state
+  const { units, setWeightUnit, setLengthUnit } = useUnits();
   const [gender, setGender] = useState("");
   const [age, setAge] = useState("");
-  const [heightMode, setHeightMode] = useState("imperial"); // 'imperial' | 'metric'
+  const [heightMode, setHeightMode] = useState(units.length || "imperial");
   const [feet, setFeet] = useState("");
   const [inches, setInches] = useState("");
   const [heightCm, setHeightCm] = useState("");
-  const [weightMode, setWeightMode] = useState("lbs"); // 'lbs' | 'kg'
+  const [weightMode, setWeightMode] = useState(units.weight || "lbs");
   const [weight, setWeight] = useState("");
   const [error, setError] = useState("");
 
   // Load any saved local progress on mount
+  useEffect(() => {
+    setHeightMode(units.length || "imperial");
+    setWeightMode(units.weight || "lbs");
+  }, [units]);
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem("snapfit_goal_data");
@@ -22,8 +29,14 @@ export default function Step1({ next }) {
         if (saved.gender) setGender(saved.gender);
         if (saved.age) setAge(String(saved.age));
 
-        if (saved.unitHeight) setHeightMode(saved.unitHeight);
-        if (saved.unitWeight) setWeightMode(saved.unitWeight);
+        if (saved.unitHeight) {
+          setHeightMode(saved.unitHeight);
+          setLengthUnit(saved.unitHeight);
+        }
+        if (saved.unitWeight) {
+          setWeightMode(saved.unitWeight);
+          setWeightUnit(saved.unitWeight);
+        }
 
         // Rehydrate height
         if (saved.unitHeight === "imperial") {
@@ -205,14 +218,20 @@ export default function Step1({ next }) {
             <div className="flex gap-1">
               <button
                 type="button"
-                onClick={() => setHeightMode("metric")}
+                onClick={() => {
+                  setHeightMode("metric");
+                  setLengthUnit("metric");
+                }}
                 className={`px-3 py-1 rounded border ${heightMode === "metric" ? "bg-[var(--snap-green)] text-black border-[var(--snap-green)]" : "border-[var(--border)]"}`}
               >
                 cm
               </button>
               <button
                 type="button"
-                onClick={() => setHeightMode("imperial")}
+                onClick={() => {
+                  setHeightMode("imperial");
+                  setLengthUnit("imperial");
+                }}
                 className={`px-3 py-1 rounded border ${heightMode === "imperial" ? "bg-[var(--snap-green)] text-black border-[var(--snap-green)]" : "border-[var(--border)]"}`}
               >
                 ft/in
@@ -261,14 +280,20 @@ export default function Step1({ next }) {
             <div className="flex gap-1">
               <button
                 type="button"
-                onClick={() => setWeightMode("lbs")}
+                onClick={() => {
+                  setWeightMode("lbs");
+                  setWeightUnit("lbs");
+                }}
                 className={`px-3 py-1 rounded border ${weightMode === "lbs" ? "bg-[var(--snap-green)] text-black border-[var(--snap-green)]" : "border-[var(--border)]"}`}
               >
                 lbs
               </button>
               <button
                 type="button"
-                onClick={() => setWeightMode("kg")}
+                onClick={() => {
+                  setWeightMode("kg");
+                  setWeightUnit("kg");
+                }}
                 className={`px-3 py-1 rounded border ${weightMode === "kg" ? "bg-[var(--snap-green)] text-black border-[var(--snap-green)]" : "border-[var(--border)]"}`}
               >
                 kg
